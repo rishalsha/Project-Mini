@@ -33,7 +33,18 @@ public class PortfolioController {
 
     @GetMapping("/{email}")
     public ResponseEntity<Portfolio> getPortfolioByEmail(@PathVariable String email) {
-        return portfolioRepository.findByEmail(email)
+        return portfolioRepository
+                .findLatestNonEmptyByEmail(email)
+                .or(() -> portfolioRepository.findFirstByEmailIgnoreCaseOrderByUpdatedAtDesc(email))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/by-email")
+    public ResponseEntity<Portfolio> getPortfolioByEmailQuery(@RequestParam("email") String email) {
+        return portfolioRepository
+                .findLatestNonEmptyByEmail(email)
+                .or(() -> portfolioRepository.findFirstByEmailIgnoreCaseOrderByUpdatedAtDesc(email))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
