@@ -172,13 +172,6 @@ npm run dev
 
 Frontend starts on **http://localhost:3000** or **http://localhost:3001**
 
-## 🔑 Default Test Credentials
-
-### Candidate Account
-
-- Email: `rishal.p.786@gmail.com`
-- Password: `Rishal123`
-
 ### Create New Account
 
 Use the registration form with any unique email.
