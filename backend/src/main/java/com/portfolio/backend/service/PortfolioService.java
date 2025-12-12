@@ -5,7 +5,9 @@ import com.portfolio.backend.dto.ParseResponse;
 import com.portfolio.backend.dto.PortfolioData;
 import com.portfolio.backend.dto.ResumeAnalysis;
 import com.portfolio.backend.entity.Portfolio;
+import com.portfolio.backend.entity.User;
 import com.portfolio.backend.repository.PortfolioRepository;
+import com.portfolio.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
@@ -18,11 +20,13 @@ import java.util.UUID;
 public class PortfolioService {
 
     private final PortfolioRepository portfolioRepository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private static final String UPLOAD_DIR = "uploads/resumes/";
 
-    public PortfolioService(PortfolioRepository portfolioRepository) {
+    public PortfolioService(PortfolioRepository portfolioRepository, UserRepository userRepository) {
         this.portfolioRepository = portfolioRepository;
+        this.userRepository = userRepository;
         this.objectMapper = new ObjectMapper();
         // Create upload directory if it doesn't exist
         try {
@@ -34,9 +38,19 @@ public class PortfolioService {
 
     public Portfolio savePortfolio(ParseResponse parseResponse, MultipartFile resumeFile) {
         try {
-            Portfolio portfolio = new Portfolio();
             PortfolioData data = parseResponse.getPortfolio();
             ResumeAnalysis analysis = parseResponse.getAnalysis();
+
+            // User must exist to create/update portfolio
+            User user = userRepository.findByEmail(data.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found. Please register first."));
+
+            // Check if portfolio already exists for this user
+            Portfolio portfolio = portfolioRepository.findByEmailIgnoreCase(data.getEmail())
+                    .orElse(new Portfolio());
+
+            // Link portfolio to user
+            portfolio.setUser(user);
 
             // Map portfolio data
             portfolio.setFullName(data.getFullName());

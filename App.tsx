@@ -36,7 +36,7 @@ const App: React.FC = () => {
               const portfolio = mapPortfolioDto(p);
               if (!isPortfolioEmpty(portfolio)) {
                 setPortfolioData(portfolio);
-                setAnalysisData(null); // analysis is private to candidate session
+                setAnalysisData(mapAnalysisDto(p)); // Load saved analysis
                 setViewMode("portfolio");
                 setLoadingPortfolio(false);
                 return;
@@ -85,13 +85,23 @@ const App: React.FC = () => {
         formData.append("file", blob, filename);
       }
 
+      // Add user email to form data for validation
+      if (user?.email) {
+        formData.append("userEmail", user.email);
+      }
+
       const response = await fetch(`${API_URL}/parse`, {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to parse resume");
+        const errorData = await response.json().catch(() => null);
+        const errorMessage =
+          errorData?.message ||
+          errorData?.error ||
+          `Server error: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -103,11 +113,12 @@ const App: React.FC = () => {
 
       // For candidates show their portfolio view; employers just screen
       setViewMode("portfolio");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error processing resume:", error);
-      alert(
-        "Something went wrong while processing the resume. Please try again."
-      );
+      const errorMessage =
+        error.message ||
+        "Something went wrong while processing the resume. Please try again.";
+      alert(errorMessage);
       setViewMode("upload");
     }
   };
@@ -150,6 +161,18 @@ const App: React.FC = () => {
     education: safeParse(p.educationJson, []),
     projects: safeParse(p.projectsJson, []),
   });
+
+  const mapAnalysisDto = (p: any): ResumeAnalysis | null => {
+    if (!p.resumeScore && !p.resumeSummary) return null;
+    return {
+      score: p.resumeScore || 0,
+      summary: p.resumeSummary || "",
+      strengths: safeParse(p.strengthsJson, []),
+      weaknesses: safeParse(p.weaknessesJson, []),
+      marketOutlook: p.marketOutlook || "",
+      jobRecommendations: safeParse(p.jobRecommendationsJson, []),
+    };
+  };
 
   // Treat empty/placeholder portfolio as missing so we show upload instead of a blank template
   const isPortfolioEmpty = (p: PortfolioData) => {

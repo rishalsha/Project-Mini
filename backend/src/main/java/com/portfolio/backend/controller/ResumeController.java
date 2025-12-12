@@ -1,5 +1,6 @@
 package com.portfolio.backend.controller;
 
+import com.portfolio.backend.dto.ErrorResponse;
 import com.portfolio.backend.dto.ParseResponse;
 import com.portfolio.backend.dto.PortfolioData;
 import com.portfolio.backend.dto.ResumeAnalysis;
@@ -40,9 +41,10 @@ public class ResumeController {
     }
 
     @PostMapping("/parse")
-    public ResponseEntity<ParseResponse> parseResume(
+    public ResponseEntity<?> parseResume(
             @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam(value = "text", required = false) String text) {
+            @RequestParam(value = "text", required = false) String text,
+            @RequestParam(value = "userEmail", required = false) String userEmail) {
 
         try {
             String resumeText;
@@ -62,6 +64,15 @@ public class ResumeController {
             System.out.println("Parsing resume with Ollama...");
             PortfolioData portfolio = ollamaService.parseResume(resumeText);
 
+            // Validate that resume email matches logged-in user's email
+            if (userEmail != null && !userEmail.trim().isEmpty()) {
+                String resumeEmail = portfolio.getEmail();
+                if (resumeEmail == null || !resumeEmail.trim().equalsIgnoreCase(userEmail.trim())) {
+                    ErrorResponse error = new ErrorResponse("Account details and resume data doesn't match");
+                    return ResponseEntity.badRequest().body(error);
+                }
+            }
+
             System.out.println("Analyzing resume with Ollama...");
             ResumeAnalysis analysis = ollamaService.analyzeResume(resumeText);
 
@@ -73,6 +84,10 @@ public class ResumeController {
             System.out.println("Saving portfolio to database...");
             Portfolio savedPortfolio = portfolioService.savePortfolio(response, resumeFile);
             System.out.println("Portfolio saved with ID: " + savedPortfolio.getId());
+
+            // Set the saved portfolio ID in the response
+            portfolio.setId(savedPortfolio.getId());
+            response.setPortfolio(portfolio);
 
             // Persist analysis per user (if available)
             userRepository.findByEmail(portfolio.getEmail()).ifPresent(user -> {

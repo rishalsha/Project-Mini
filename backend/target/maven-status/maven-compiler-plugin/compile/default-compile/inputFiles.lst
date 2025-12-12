@@ -6,6 +6,7 @@ C:\Users\risha\Desktop\Project-Mini\backend\src\main\java\com\portfolio\backend\
 C:\Users\risha\Desktop\Project-Mini\backend\src\main\java\com\portfolio\backend\entity\User.java
 C:\Users\risha\Desktop\Project-Mini\backend\src\main\java\com\portfolio\backend\controller\EmployerAuthController.java
 C:\Users\risha\Desktop\Project-Mini\backend\src\main\java\com\portfolio\backend\entity\Employer.java
+C:\Users\risha\Desktop\Project-Mini\backend\src\main\java\com\portfolio\backend\dto\ErrorResponse.java
 C:\Users\risha\Desktop\Project-Mini\backend\src\main\java\com\portfolio\backend\service\UserService.java
 C:\Users\risha\Desktop\Project-Mini\backend\src\main\java\com\portfolio\backend\repository\JobRecommendationRepository.java
 C:\Users\risha\Desktop\Project-Mini\backend\src\main\java\com\portfolio\backend\dto\ResumeAnalysis.java
