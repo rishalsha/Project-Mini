@@ -23,6 +23,7 @@ com\portfolio\backend\dto\ParseResponse.class
 com\portfolio\backend\repository\EmployerRepository.class
 com\portfolio\backend\dto\PortfolioData.class
 com\portfolio\backend\service\OllamaService.class
+com\portfolio\backend\controller\PortfolioController.class
 com\portfolio\backend\controller\AuthController.class
 com\portfolio\backend\dto\PortfolioData$Education.class
 com\portfolio\backend\entity\Employer.class
