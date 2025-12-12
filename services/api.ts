@@ -70,3 +70,13 @@ export async function fetchEmployerByEmail(email: string): Promise<User> {
   const data = await handleResponse<any>(res);
   return mapUser(data, 'employer');
 }
+
+export async function getAllPortfolios(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/api/portfolios`);
+  return handleResponse<any[]>(res);
+}
+
+export async function getPortfolioByEmail(email: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/portfolios/${encodeURIComponent(email)}`);
+  return handleResponse<any>(res);
+}
