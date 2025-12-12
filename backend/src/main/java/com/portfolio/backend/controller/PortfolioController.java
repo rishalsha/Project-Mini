@@ -48,4 +48,37 @@ public class PortfolioController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/{id}/resume")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadResume(@PathVariable Long id) {
+        try {
+            Portfolio portfolio = portfolioRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Portfolio not found"));
+
+            if (portfolio.getResumeFilePath() == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            java.nio.file.Path filePath = java.nio.file.Paths.get("uploads/resumes/" + portfolio.getResumeFilePath());
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(
+                    filePath.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                String filename = portfolio.getFullName() != null
+                        ? portfolio.getFullName().replace(" ", "_") + "_Resume.pdf"
+                        : "Resume.pdf";
+
+                return ResponseEntity.ok()
+                        .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + filename + "\"")
+                        .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/pdf")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            System.err.println("Error downloading resume: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

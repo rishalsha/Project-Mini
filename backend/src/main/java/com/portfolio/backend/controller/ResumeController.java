@@ -46,10 +46,12 @@ public class ResumeController {
 
         try {
             String resumeText;
+            MultipartFile resumeFile = null;
 
             if (file != null && !file.isEmpty()) {
                 System.out.println("Processing file: " + file.getOriginalFilename());
                 resumeText = documentParserService.extractText(file);
+                resumeFile = file;
             } else if (text != null && !text.isEmpty()) {
                 System.out.println("Processing text input");
                 resumeText = text;
@@ -69,7 +71,7 @@ public class ResumeController {
 
             // Save to PostgreSQL database
             System.out.println("Saving portfolio to database...");
-            Portfolio savedPortfolio = portfolioService.savePortfolio(response);
+            Portfolio savedPortfolio = portfolioService.savePortfolio(response, resumeFile);
             System.out.println("Portfolio saved with ID: " + savedPortfolio.getId());
 
             // Persist analysis per user (if available)

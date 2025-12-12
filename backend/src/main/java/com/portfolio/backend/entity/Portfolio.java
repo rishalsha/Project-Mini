@@ -56,6 +56,9 @@ public class Portfolio {
     @Column(columnDefinition = "TEXT")
     private String jobRecommendationsJson;
 
+    @Column(name = "resume_file_path")
+    private String resumeFilePath;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -248,5 +251,13 @@ public class Portfolio {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getResumeFilePath() {
+        return resumeFilePath;
+    }
+
+    public void setResumeFilePath(String resumeFilePath) {
+        this.resumeFilePath = resumeFilePath;
     }
 }

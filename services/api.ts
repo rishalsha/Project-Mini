@@ -77,6 +77,7 @@ export async function getAllPortfolios(): Promise<any[]> {
 }
 
 export async function getPortfolioByEmail(email: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/api/portfolios/${encodeURIComponent(email)}`);
+  const res = await fetch(`${API_BASE}/api/portfolios/by-email?email=${encodeURIComponent(email)}`);
+  if (res.status === 404) return null; // no portfolio yet
   return handleResponse<any>(res);
 }
