@@ -36,6 +36,7 @@ const EmployerDashboard: React.FC<Props> = ({
         if (!email || !fullName) return; // skip incomplete entries
 
         const portfolio: PortfolioData = {
+          id: p.id,
           fullName,
           headline: p.headline || p.resumeSummary || "No headline available",
           about: p.about || p.resumeSummary || "",

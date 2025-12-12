@@ -32,17 +32,25 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
     ) || [];
 
   const handleDownloadResume = async () => {
-    if (!data.id) {
-      alert("Cannot download resume: Portfolio ID not found");
-      return;
-    }
-
     try {
       const API_BASE =
         (import.meta as any)?.env?.VITE_API_URL || "http://localhost:8080";
-      const response = await fetch(
-        `${API_BASE}/api/portfolios/${data.id}/resume`
-      );
+
+      // Use email-based download to always fetch the latest resume upload
+      const downloadUrl = data.email
+        ? `${API_BASE}/api/portfolios/by-email/resume?email=${encodeURIComponent(
+            data.email
+          )}`
+        : data.id
+        ? `${API_BASE}/api/portfolios/${data.id}/resume`
+        : "";
+
+      if (!downloadUrl) {
+        alert("Cannot download resume: Portfolio reference not found");
+        return;
+      }
+
+      const response = await fetch(downloadUrl);
 
       if (!response.ok) {
         throw new Error("Resume file not found");

@@ -211,11 +211,8 @@ const App: React.FC = () => {
     );
   }
 
-  // Determine if we are in the "Employer's view of a Candidate"
-  // Logic:
-  // 1. If logged in as Employer, they always see EmployerView (unless on dashboard/upload)
-  // 2. If logged in as Candidate, they can toggle via viewMode='employer'
-  const isEmployerView = user.role === "employer" || viewMode === "employer";
+  // Employer view applies only to employer accounts
+  const isEmployerView = user.role === "employer";
 
   return (
     <div className="relative">
@@ -305,31 +302,16 @@ const App: React.FC = () => {
               isEmployerView={isEmployerView}
             />
 
-            {/* Floating Toggle - Only show for Candidate */}
+            {/* Candidate: re-upload & re-analyze */}
             {user.role === "candidate" && (
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-900/90 backdrop-blur text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 transition-transform">
+              <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-3">
                 <button
-                  className="flex items-center gap-2 text-sm font-medium text-slate-200 hover:text-white transition-colors"
-                  title="Toggle View Mode"
-                  onClick={toggleView}
-                >
-                  {viewMode === "portfolio" ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
-                  {viewMode === "portfolio"
-                    ? "Preview as Employer"
-                    : "Back to My Analysis"}
-                </button>
-
-                <button
-                  className="bg-white text-slate-900 px-4 py-2 rounded-full text-sm font-bold hover:bg-slate-100 transition-colors"
+                  className="bg-indigo-600 text-white px-4 py-3 rounded-full text-sm font-bold shadow-lg hover:bg-indigo-700 transition-colors"
                   onClick={() => {
                     setViewMode("upload");
                   }}
                 >
-                  Update Resume
+                  Re-upload & Re-analyze
                 </button>
               </div>
             )}
