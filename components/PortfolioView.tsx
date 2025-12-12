@@ -31,6 +31,20 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
       (s) => s.category !== "soft-skills" && s.category !== "other"
     ) || [];
 
+  // Deterministic accent for project cards (avoid random placeholders)
+  const projectAccent = (seed: string) => {
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return {
+      background: `linear-gradient(135deg, hsl(${hue}, 75%, 70%), hsl(${
+        (hue + 40) % 360
+      }, 70%, 55%))`,
+    } as React.CSSProperties;
+  };
+
   const handleDownloadResume = async () => {
     try {
       const API_BASE =
@@ -366,21 +380,19 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
                 key={idx}
                 className="group bg-white rounded-3xl overflow-hidden border border-slate-200 hover:shadow-2xl transition-all duration-300 flex flex-col h-full transform hover:-translate-y-2"
               >
-                <div className="h-64 bg-slate-100 relative overflow-hidden">
-                  {/* Placeholder Logic for "Screenshots" */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                    <span className="text-6xl opacity-10 font-black text-indigo-900 select-none">
+                <div
+                  className="h-64 relative overflow-hidden"
+                  style={projectAccent(project.name)}
+                >
+                  <div className="absolute inset-0 bg-black/10" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6">
+                    <span className="text-6xl font-black opacity-20 mb-2 select-none">
                       {project.name.charAt(0)}
                     </span>
+                    <span className="text-xl font-semibold drop-shadow-sm line-clamp-2">
+                      {project.name}
+                    </span>
                   </div>
-                  <img
-                    src={`https://picsum.photos/seed/${project.name.replace(
-                      /\s/g,
-                      ""
-                    )}/800/600`}
-                    alt={project.name}
-                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500 mix-blend-multiply"
-                  />
                 </div>
                 <div className="p-8 flex-1 flex flex-col">
                   <h3 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">
@@ -389,17 +401,6 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
                   <p className="text-slate-600 text-lg mb-6 flex-1 leading-relaxed">
                     {project.description}
                   </p>
-
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {project.technologies.map((tech, tIdx) => (
-                      <span
-                        key={tIdx}
-                        className="text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
 
                   {project.link && (
                     <a
