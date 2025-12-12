@@ -3,9 +3,14 @@ package com.portfolio.backend.controller;
 import com.portfolio.backend.entity.Portfolio;
 import com.portfolio.backend.repository.PortfolioRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/api/portfolios")
@@ -68,18 +73,40 @@ public class PortfolioController {
     }
 
     @GetMapping("/{id}/resume")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadResume(@PathVariable Long id) {
+    public ResponseEntity<Resource> downloadResume(@PathVariable Long id) {
         try {
             Portfolio portfolio = portfolioRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Portfolio not found"));
 
+            return buildResumeResponse(portfolio);
+        } catch (Exception e) {
+            System.err.println("Error downloading resume: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/by-email/resume")
+    public ResponseEntity<Resource> downloadLatestResumeByEmail(@RequestParam("email") String email) {
+        try {
+            Portfolio portfolio = portfolioRepository
+                    .findFirstByEmailIgnoreCaseOrderByUpdatedAtDesc(email)
+                    .orElseThrow(() -> new RuntimeException("Portfolio not found"));
+
+            return buildResumeResponse(portfolio);
+        } catch (Exception e) {
+            System.err.println("Error downloading resume: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    private ResponseEntity<Resource> buildResumeResponse(Portfolio portfolio) {
+        try {
             if (portfolio.getResumeFilePath() == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            java.nio.file.Path filePath = java.nio.file.Paths.get("uploads/resumes/" + portfolio.getResumeFilePath());
-            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(
-                    filePath.toUri());
+            Path filePath = Paths.get("uploads/resumes/" + portfolio.getResumeFilePath());
+            Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists() && resource.isReadable()) {
                 String filename = portfolio.getFullName() != null
@@ -87,15 +114,14 @@ public class PortfolioController {
                         : "Resume.pdf";
 
                 return ResponseEntity.ok()
-                        .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                                "attachment; filename=\"" + filename + "\"")
-                        .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/pdf")
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                        .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
                         .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
             }
+
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            System.err.println("Error downloading resume: " + e.getMessage());
+            System.err.println("Error building resume response: " + e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }

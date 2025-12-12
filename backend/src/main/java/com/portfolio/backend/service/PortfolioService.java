@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.UUID;
 
 @Service
 public class PortfolioService {
@@ -77,14 +76,25 @@ public class PortfolioService {
             portfolio.setMarketOutlook(analysis.getMarketOutlook());
             portfolio.setJobRecommendationsJson(objectMapper.writeValueAsString(analysis.getJobRecommendations()));
 
-            // Save resume file if provided
+            // Save resume file if provided (replace previous both in storage and DB)
             if (resumeFile != null && !resumeFile.isEmpty()) {
                 String originalFilename = resumeFile.getOriginalFilename();
-                String extension = originalFilename != null && originalFilename.contains(".")
+                String extension = (originalFilename != null && originalFilename.contains("."))
                         ? originalFilename.substring(originalFilename.lastIndexOf("."))
                         : ".pdf";
-                String filename = UUID.randomUUID().toString() + extension;
-                Path filePath = Paths.get(UPLOAD_DIR + filename);
+
+                // Use stable filename per user so each upload overwrites the last
+                String filename = user.getId() + "_resume" + extension;
+                Path uploadDir = Paths.get(UPLOAD_DIR);
+                Files.createDirectories(uploadDir);
+
+                // Delete previous file if it exists and is different
+                if (portfolio.getResumeFilePath() != null) {
+                    Path oldPath = uploadDir.resolve(portfolio.getResumeFilePath());
+                    deleteIfExists(oldPath);
+                }
+
+                Path filePath = uploadDir.resolve(filename);
                 Files.copy(resumeFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 portfolio.setResumeFilePath(filename);
             }
@@ -93,6 +103,16 @@ public class PortfolioService {
         } catch (Exception e) {
             System.err.println("Error saving portfolio: " + e.getMessage());
             throw new RuntimeException("Failed to save portfolio", e);
+        }
+    }
+
+    private void deleteIfExists(Path path) {
+        try {
+            if (Files.exists(path)) {
+                Files.delete(path);
+            }
+        } catch (Exception e) {
+            System.err.println("Could not delete old resume file: " + e.getMessage());
         }
     }
 
