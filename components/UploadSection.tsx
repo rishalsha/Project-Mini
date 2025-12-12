@@ -11,12 +11,16 @@ interface Props {
   onUpload: (content: string, mimeType: string) => void;
   isLoading: boolean;
   isEmployer?: boolean;
+  canViewPortfolio?: boolean;
+  onViewPortfolio?: () => void;
 }
 
 const UploadSection: React.FC<Props> = ({
   onUpload,
   isLoading,
   isEmployer,
+  canViewPortfolio,
+  onViewPortfolio,
 }) => {
   const [activeTab, setActiveTab] = useState<"upload" | "text">("upload");
   const [textInput, setTextInput] = useState("");
@@ -162,6 +166,15 @@ const UploadSection: React.FC<Props> = ({
       <p className="mt-8 text-xs text-slate-400">
         Powered by Ollama (Llama 3.2:3b)
       </p>
+
+      {!isEmployer && canViewPortfolio && onViewPortfolio && (
+        <button
+          onClick={onViewPortfolio}
+          className="mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-700 underline"
+        >
+          View existing portfolio
+        </button>
+      )}
     </div>
   );
 };

@@ -27,14 +27,20 @@ const EmployerDashboard: React.FC<Props> = ({
       setError("");
       const portfolios = await getAllPortfolios();
 
-      // Transform portfolios to CandidateProfile format with full portfolio details (no analysis for employers)
-      const profiles: CandidateProfile[] = portfolios.map((p: any) => {
+      // Deduplicate by email and keep the latest updatedAt/createdAt
+      const uniqueByEmail = new Map<string, CandidateProfile>();
+
+      portfolios.forEach((p: any) => {
+        const email = (p.email || "").trim().toLowerCase();
+        const fullName = (p.fullName || "").trim();
+        if (!email || !fullName) return; // skip incomplete entries
+
         const portfolio: PortfolioData = {
-          fullName: p.fullName || "Unknown",
+          fullName,
           headline: p.headline || p.resumeSummary || "No headline available",
           about: p.about || p.resumeSummary || "",
           location: p.location || "",
-          email: p.email || "",
+          email,
           phone: p.phone || "",
           linkedin: p.linkedin || "",
           github: p.github || "",
@@ -50,21 +56,25 @@ const EmployerDashboard: React.FC<Props> = ({
 
         const lastUpdated =
           p.updatedAt || p.createdAt || new Date().toISOString();
+        const timestamp = toTimestamp(lastUpdated);
 
-        return {
-          user: {
-            id: String(p.id || ""),
-            email: portfolio.email,
-            name: portfolio.fullName,
-            role: "candidate" as const,
-          },
-          portfolio,
-          analysis: null, // employers should not see analysis
-          lastUpdated,
-        };
+        const existing = uniqueByEmail.get(email);
+        if (!existing || toTimestamp(existing.lastUpdated) < timestamp) {
+          uniqueByEmail.set(email, {
+            user: {
+              id: String(p.id || email),
+              email,
+              name: portfolio.fullName,
+              role: "candidate" as const,
+            },
+            portfolio,
+            analysis: null, // employers should not see analysis
+            lastUpdated,
+          });
+        }
       });
 
-      setCandidates(profiles);
+      setCandidates(Array.from(uniqueByEmail.values()));
     } catch (err: any) {
       console.error("Failed to load portfolios:", err);
       setError(err.message || "Failed to load candidates");
@@ -81,6 +91,12 @@ const EmployerDashboard: React.FC<Props> = ({
     } catch {
       return fallback;
     }
+  };
+
+  const toTimestamp = (value: string | null | undefined): number => {
+    if (!value) return 0;
+    const t = Date.parse(value);
+    return Number.isNaN(t) ? 0 : t;
   };
 
   const filteredCandidates = candidates.filter(

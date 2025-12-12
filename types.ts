@@ -25,6 +25,7 @@ export interface Skill {
 }
 
 export interface PortfolioData {
+  id?: number;
   fullName: string;
   headline: string;
   about: string;
