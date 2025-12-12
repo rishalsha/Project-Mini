@@ -63,7 +63,9 @@ public class PortfolioService {
     }
 
     public Portfolio getPortfolioByEmail(String email) {
-        return portfolioRepository.findByEmail(email)
+        return portfolioRepository
+                .findLatestNonEmptyByEmail(email)
+                .or(() -> portfolioRepository.findFirstByEmailIgnoreCaseOrderByUpdatedAtDesc(email))
                 .orElseThrow(() -> new RuntimeException("Portfolio not found with email: " + email));
     }
 }
