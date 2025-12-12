@@ -17,6 +17,7 @@ com\portfolio\backend\entity\Portfolio.class
 com\portfolio\backend\config\DataFixRunner.class
 com\portfolio\backend\entity\ResumeAnalysisEntity.class
 com\portfolio\backend\entity\JobRecommendation.class
+com\portfolio\backend\dto\ErrorResponse.class
 com\portfolio\backend\entity\User.class
 com\portfolio\backend\controller\EmployerAuthController.class
 com\portfolio\backend\dto\ParseResponse.class

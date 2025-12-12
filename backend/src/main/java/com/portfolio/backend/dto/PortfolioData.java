@@ -1,8 +1,11 @@
 package com.portfolio.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PortfolioData {
+    private Long id;
     private String fullName;
     private String headline;
     private String about;
@@ -18,6 +21,14 @@ public class PortfolioData {
     private List<Project> projects;
 
     // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getFullName() {
         return fullName;
     }

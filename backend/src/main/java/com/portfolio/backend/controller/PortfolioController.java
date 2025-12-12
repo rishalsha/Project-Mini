@@ -21,8 +21,26 @@ public class PortfolioController {
 
     @GetMapping
     public ResponseEntity<List<Portfolio>> getAllPortfolios() {
-        List<Portfolio> portfolios = portfolioRepository.findAll();
-        return ResponseEntity.ok(portfolios);
+        // Get all portfolios, grouped by email (latest only)
+        List<Portfolio> allPortfolios = portfolioRepository.findAll();
+
+        // Filter to keep only the latest portfolio per email
+        java.util.Map<String, Portfolio> uniquePortfolios = new java.util.HashMap<>();
+        for (Portfolio p : allPortfolios) {
+            String email = p.getEmail() != null ? p.getEmail().toLowerCase() : "";
+            if (email.isEmpty() || p.getFullName() == null || p.getFullName().trim().isEmpty()) {
+                continue; // Skip incomplete portfolios
+            }
+
+            Portfolio existing = uniquePortfolios.get(email);
+            if (existing == null ||
+                    (p.getUpdatedAt() != null && existing.getUpdatedAt() != null &&
+                            p.getUpdatedAt().isAfter(existing.getUpdatedAt()))) {
+                uniquePortfolios.put(email, p);
+            }
+        }
+
+        return ResponseEntity.ok(new java.util.ArrayList<>(uniquePortfolios.values()));
     }
 
     @GetMapping("/search")

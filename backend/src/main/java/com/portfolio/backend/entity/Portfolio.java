@@ -1,15 +1,22 @@
 package com.portfolio.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "portfolios")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Portfolio {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({ "portfolios", "hibernateLazyInitializer", "handler" })
+    private User user;
 
     @Column(name = "full_name")
     private String fullName;
@@ -83,6 +90,14 @@ public class Portfolio {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getFullName() {
