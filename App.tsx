@@ -108,6 +108,17 @@ const App: React.FC = () => {
       const portfolio = data.portfolio;
       const analysis = data.analysis;
 
+      // Validate response before setting state
+      if (
+        !portfolio ||
+        !portfolio.fullName ||
+        portfolio.fullName.trim() === ""
+      ) {
+        throw new Error(
+          "Failed to extract name from resume. Please ensure the resume contains a clear name and try again."
+        );
+      }
+
       setPortfolioData(portfolio);
       setAnalysisData(analysis);
 

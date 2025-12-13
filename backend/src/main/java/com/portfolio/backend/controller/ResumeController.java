@@ -64,6 +64,24 @@ public class ResumeController {
             System.out.println("Parsing resume with Ollama...");
             PortfolioData portfolio = ollamaService.parseResume(resumeText);
 
+            // Validate parsed data quality - reject obvious address/location misparses
+            if (portfolio.getFullName() == null || portfolio.getFullName().trim().isEmpty()) {
+                ErrorResponse error = new ErrorResponse(
+                        "Failed to extract name from resume. Please ensure the resume contains a clear name and try again.");
+                return ResponseEntity.status(400).body(error);
+            }
+
+            String nameLC = portfolio.getFullName().toLowerCase();
+            if (nameLC.contains("house") || nameLC.contains("street") || nameLC.contains("road") ||
+                    nameLC.contains("avenue") || nameLC.contains("blvd") || nameLC.contains("apt") ||
+                    nameLC.contains("apartment") || nameLC.contains("suite") || nameLC.contains("unit") ||
+                    portfolio.getFullName().matches(".*\\d{3,}.*")) { // Only reject if 3+ consecutive digits (like zip
+                                                                      // code)
+                ErrorResponse error = new ErrorResponse(
+                        "Resume parsing failed - address extracted instead of name. Please ensure the resume clearly shows your name at the top and try again.");
+                return ResponseEntity.status(400).body(error);
+            }
+
             // Validate that resume email matches logged-in user's email
             if (userEmail != null && !userEmail.trim().isEmpty()) {
                 String resumeEmail = portfolio.getEmail();
@@ -109,8 +127,12 @@ public class ResumeController {
 
         } catch (Exception e) {
             System.err.println("Error processing resume: " + e.getMessage());
-            // Return a clearer error message to the client
-            return ResponseEntity.status(500).body(new ParseResponse());
+            e.printStackTrace();
+            // Return a proper error response
+            ErrorResponse error = new ErrorResponse(
+                    "Unable to process resume. Please ensure Ollama AI service is running on http://localhost:11434 and try again. Error: "
+                            + e.getMessage());
+            return ResponseEntity.status(503).body(error);
         }
     }
 
