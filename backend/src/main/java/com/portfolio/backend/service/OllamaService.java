@@ -85,9 +85,9 @@ public class OllamaService {
             - If experience section is empty, return empty array []
             - If education section is empty, return at least one entry with placeholder text
             - If projects section is empty, return empty array []
-            - For projects, include EVERY distinct project mentioned in the resume (do not merge or drop them). If 3-5 projects are present, return all of them. If names repeat, keep separate entries when descriptions differ.
+            - For projects, include EVERY distinct project mentioned in the resume (do not merge or drop them). If 10-15 projects are present, return all of them. If names repeat, keep separate entries when descriptions differ.
             - If skills are mentioned but not explicitly listed, infer from experience and projects
-            - Ensure skills array has at least 3-5 skills if any are mentioned in resume
+            - Ensure skills array has at least 5-6 skills if any are mentioned in resume
             - For missing or unclear information, use the specified placeholder text consistently
             - Always return valid JSON with all fields present
 
@@ -97,6 +97,8 @@ public class OllamaService {
             Remember: Return ONLY the JSON object with all required fields, in the exact order specified above. No markdown, no explanations.
             """,
         resumeText);
+
+        System.out.println(resumeText);
 
     try {
       String response = callOllama(prompt);

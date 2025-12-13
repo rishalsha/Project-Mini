@@ -115,7 +115,7 @@ const App: React.FC = () => {
         portfolio.fullName.trim() === ""
       ) {
         throw new Error(
-          "Failed to extract name from resume. Please ensure the resume contains a clear name and try again."
+          "Failed to parse resume properly. The AI service may be unavailable. Please ensure Ollama is running and try again."
         );
       }
 
