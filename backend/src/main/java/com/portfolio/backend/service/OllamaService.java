@@ -85,6 +85,7 @@ public class OllamaService {
             - If experience section is empty, return empty array []
             - If education section is empty, return at least one entry with placeholder text
             - If projects section is empty, return empty array []
+            - For projects, include EVERY distinct project mentioned in the resume (do not merge or drop them). If 3-5 projects are present, return all of them. If names repeat, keep separate entries when descriptions differ.
             - If skills are mentioned but not explicitly listed, infer from experience and projects
             - Ensure skills array has at least 3-5 skills if any are mentioned in resume
             - For missing or unclear information, use the specified placeholder text consistently
