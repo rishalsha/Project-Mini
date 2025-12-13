@@ -2,6 +2,9 @@ package com.portfolio.backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.portfolio.backend.dto.PortfolioData;
 import com.portfolio.backend.dto.ResumeAnalysis;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,7 +101,7 @@ public class OllamaService {
             """,
         resumeText);
 
-        System.out.println(resumeText);
+    System.out.println(resumeText);
 
     try {
       String response = callOllama(prompt);
@@ -277,10 +280,124 @@ public class OllamaService {
 
     if (matcher.find()) {
       String jsonText = matcher.group();
+      // Normalize model quirks before strict deserialization
+      if (clazz == com.portfolio.backend.dto.PortfolioData.class) {
+        // First, lenient text-level fixes to make JSON parseable
+        jsonText = normalizeSkillLevelsLenient(jsonText);
+        // Then, strict normalization via JSON tree
+        jsonText = normalizeSkillLevels(jsonText);
+      }
       return objectMapper.readValue(jsonText, clazz);
     }
 
     throw new Exception("No valid JSON found in response");
+  }
+
+  /**
+   * Lenient normalization using regex so obviously invalid forms (e.g., level:
+   * 70-90 without quotes)
+   * become parseable JSON before tree-based processing.
+   */
+  private String normalizeSkillLevelsLenient(String jsonText) {
+    try {
+      // Pass 1: level: 70-90 (no quotes)
+      jsonText = replaceLevelPattern(jsonText, "\\\"level\\\"\\s*:\\s*(\\d{1,3})\\s*[-–]\\s*(\\d{1,3})", false);
+      // Pass 2: level: \"70-90\"
+      jsonText = replaceLevelPattern(jsonText, "\\\"level\\\"\\s*:\\s*\\\"(\\d{1,3})\\s*[-–]\\s*(\\d{1,3})\\\"", true);
+      // Pass 3: level: \"80%\"
+      jsonText = replaceSingleNumberPattern(jsonText, "\\\"level\\\"\\s*:\\s*\\\"(\\d{1,3})%\\\"", true);
+      // Pass 4: level: \"80\"
+      jsonText = replaceSingleNumberPattern(jsonText, "\\\"level\\\"\\s*:\\s*\\\"(\\d{1,3})\\\"", true);
+    } catch (Exception e) {
+      System.err.println("normalizeSkillLevelsLenient(): " + e.getMessage());
+    }
+    return jsonText;
+  }
+
+  private String replaceLevelPattern(String input, String regex, boolean quoted) {
+    StringBuffer sb = new StringBuffer();
+    Matcher m = Pattern.compile(regex).matcher(input);
+    while (m.find()) {
+      int a = Integer.parseInt(m.group(1));
+      int b = Integer.parseInt(m.group(2));
+      int avg = Math.max(0, Math.min(100, (a + b) / 2));
+      String replacement = "\"level\": " + avg;
+      m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+    }
+    m.appendTail(sb);
+    return sb.toString();
+  }
+
+  private String replaceSingleNumberPattern(String input, String regex, boolean quoted) {
+    StringBuffer sb = new StringBuffer();
+    Matcher m = Pattern.compile(regex).matcher(input);
+    while (m.find()) {
+      int n = Integer.parseInt(m.group(1));
+      int v = Math.max(0, Math.min(100, n));
+      String replacement = "\"level\": " + v;
+      m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+    }
+    m.appendTail(sb);
+    return sb.toString();
+  }
+
+  /**
+   * Strict normalization via JSON tree: converts textual level values to
+   * integers.
+   */
+  private String normalizeSkillLevels(String jsonText) {
+    try {
+      JsonNode root = objectMapper.readTree(jsonText);
+      if (root instanceof ObjectNode objectNode) {
+        JsonNode skillsNode = objectNode.get("skills");
+        if (skillsNode instanceof ArrayNode arrayNode) {
+          for (int i = 0; i < arrayNode.size(); i++) {
+            JsonNode skill = arrayNode.get(i);
+            if (skill instanceof ObjectNode skillObj) {
+              JsonNode levelNode = skillObj.get("level");
+              if (levelNode != null && levelNode.isTextual()) {
+                int normalized = coerceLevelToInt(levelNode.asText());
+                skillObj.set("level", IntNode.valueOf(normalized));
+              }
+            }
+          }
+        }
+      }
+      return objectMapper.writeValueAsString(root);
+    } catch (Exception e) {
+      System.err.println("normalizeSkillLevels(): " + e.getMessage());
+      return jsonText;
+    }
+  }
+
+  /**
+   * Extracts an integer from textual level representations. Handles:
+   * - Ranges like "70-90" (uses average)
+   * - Percent like "80%" (uses 80)
+   * - Descriptive text containing a number, uses the first number
+   * Bounds result to [0, 100].
+   */
+  private int coerceLevelToInt(String text) {
+    if (text == null || text.isBlank())
+      return 60; // reasonable default
+    try {
+      // Range pattern: e.g., 70-90
+      Matcher range = Pattern.compile("(\\d{1,3})\\s*[-–]\\s*(\\d{1,3})").matcher(text);
+      if (range.find()) {
+        int a = Integer.parseInt(range.group(1));
+        int b = Integer.parseInt(range.group(2));
+        int avg = (a + b) / 2;
+        return Math.max(0, Math.min(100, avg));
+      }
+      // Percent or plain number embedded
+      Matcher num = Pattern.compile("(\\d{1,3})").matcher(text);
+      if (num.find()) {
+        int n = Integer.parseInt(num.group(1));
+        return Math.max(0, Math.min(100, n));
+      }
+    } catch (Exception ignored) {
+    }
+    return 60;
   }
 
   private String sanitizeFullName(String rawName, String resumeText) {
