@@ -12,6 +12,8 @@ import {
   GraduationCap,
   Award,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface Props {
@@ -30,6 +32,17 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
     data.skills?.filter(
       (s) => s.category !== "soft-skills" && s.category !== "other"
     ) || [];
+
+  const projects = Array.isArray(data.projects) ? data.projects : [];
+  const projectsRowRef = React.useRef<HTMLDivElement | null>(null);
+
+  const scrollProjects = (direction: "left" | "right") => {
+    const node = projectsRowRef.current;
+    if (!node) return;
+    const cardWidth = 360; // approximate card width including gap
+    const delta = direction === "left" ? -cardWidth : cardWidth;
+    node.scrollBy({ left: delta, behavior: "smooth" });
+  };
 
   // Deterministic accent for project cards (avoid random placeholders)
   const projectAccent = (seed: string) => {
@@ -141,8 +154,10 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
           </div>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight text-slate-900 mb-8 leading-tight">
             Hi, I'm {data.fullName}. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
-              I build things for the web.
+            <span className="text-4xl md:text-6xl lg:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
+              {data.headline ||
+                data.about?.split(".")[0] ||
+                "I build innovative solutions."}
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-12 font-light">
@@ -374,49 +389,81 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {data.projects?.map((project, idx) => (
-              <div
-                key={idx}
-                className="group bg-white rounded-3xl overflow-hidden border border-slate-200 hover:shadow-2xl transition-all duration-300 flex flex-col h-full transform hover:-translate-y-2"
+          <div className="relative">
+            {projects.length > 3 && (
+              <button
+                onClick={() => scrollProjects("left")}
+                className="absolute -left-6 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full border border-slate-200 bg-white shadow-sm flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-colors z-10"
+                aria-label="Previous projects"
               >
-                <div
-                  className="h-64 relative overflow-hidden"
-                  style={projectAccent(project.name)}
-                >
-                  <div className="absolute inset-0 bg-black/10" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6">
-                    <span className="text-6xl font-black opacity-20 mb-2 select-none">
-                      {project.name.charAt(0)}
-                    </span>
-                    <span className="text-xl font-semibold drop-shadow-sm line-clamp-2">
-                      {project.name}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-8 flex-1 flex flex-col">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">
-                    {project.name}
-                  </h3>
-                  <p className="text-slate-600 text-lg mb-6 flex-1 leading-relaxed">
-                    {project.description}
-                  </p>
+                <ChevronLeft size={22} />
+              </button>
+            )}
 
-                  {project.link && (
-                    <a
-                      href={project.link}
-                      className="inline-flex items-center text-base font-bold text-indigo-600 hover:text-indigo-700 mt-auto group/link"
+            <div
+              ref={projectsRowRef}
+              className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory pr-2 scrollbar-hide"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {projects.length > 0 ? (
+                projects.map((project, idx) => (
+                  <div
+                    key={idx}
+                    className="group bg-white rounded-3xl overflow-hidden border border-slate-200 hover:shadow-2xl transition-all duration-300 flex flex-col h-full transform hover:-translate-y-2 min-w-[320px] max-w-[360px] snap-start"
+                  >
+                    <div
+                      className="h-64 relative overflow-hidden"
+                      style={projectAccent(project.name)}
                     >
-                      View Project{" "}
-                      <ExternalLink
-                        size={18}
-                        className="ml-2 group-hover/link:translate-x-1 transition-transform"
-                      />
-                    </a>
-                  )}
+                      <div className="absolute inset-0 bg-black/10" />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6">
+                        <span className="text-6xl font-black opacity-20 mb-2 select-none">
+                          {project.name.charAt(0)}
+                        </span>
+                        <span className="text-xl font-semibold drop-shadow-sm line-clamp-2">
+                          {project.name}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-8 flex-1 flex flex-col">
+                      <h3 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">
+                        {project.name}
+                      </h3>
+                      <p className="text-slate-600 text-lg mb-6 flex-1 leading-relaxed">
+                        {project.description}
+                      </p>
+
+                      {project.link && (
+                        <a
+                          href={project.link}
+                          className="inline-flex items-center text-base font-bold text-indigo-600 hover:text-indigo-700 mt-auto group/link"
+                        >
+                          View Project{" "}
+                          <ExternalLink
+                            size={18}
+                            className="ml-2 group-hover/link:translate-x-1 transition-transform"
+                          />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 bg-white border border-dashed border-slate-200 rounded-3xl text-center text-slate-500 min-w-[320px]">
+                  No projects available yet.
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
+
+            {projects.length > 3 && (
+              <button
+                onClick={() => scrollProjects("right")}
+                className="absolute -right-6 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full border border-slate-200 bg-white shadow-sm flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-colors z-10"
+                aria-label="Next projects"
+              >
+                <ChevronRight size={22} />
+              </button>
+            )}
           </div>
         </div>
       </section>

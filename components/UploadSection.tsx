@@ -45,6 +45,9 @@ const UploadSection: React.FC<Props> = ({
       };
       reader.readAsDataURL(file);
     }
+
+    // Allow re-uploading the same file by clearing the input value
+    e.target.value = "";
   };
 
   const handleTextSubmit = () => {
@@ -117,7 +120,10 @@ const UploadSection: React.FC<Props> = ({
               {activeTab === "upload" ? (
                 <div
                   className="border-2 border-dashed border-slate-300 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all group"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                    fileInputRef.current?.click();
+                  }}
                 >
                   <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <UploadCloud size={32} />
