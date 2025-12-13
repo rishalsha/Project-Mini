@@ -67,8 +67,8 @@ public class ResumeController {
             // Validate parsed data quality - reject obvious address/location misparses
             if (portfolio.getFullName() == null || portfolio.getFullName().trim().isEmpty()) {
                 ErrorResponse error = new ErrorResponse(
-                        "Failed to extract name from resume. Please ensure the resume contains a clear name and try again.");
-                return ResponseEntity.status(400).body(error);
+                        "Failed to parse resume properly. The AI service may be unavailable. Please ensure Ollama is running and try again.");
+                return ResponseEntity.status(503).body(error);
             }
 
             String nameLC = portfolio.getFullName().toLowerCase();
@@ -78,8 +78,8 @@ public class ResumeController {
                     portfolio.getFullName().matches(".*\\d{3,}.*")) { // Only reject if 3+ consecutive digits (like zip
                                                                       // code)
                 ErrorResponse error = new ErrorResponse(
-                        "Resume parsing failed - address extracted instead of name. Please ensure the resume clearly shows your name at the top and try again.");
-                return ResponseEntity.status(400).body(error);
+                        "Failed to parse resume properly. The AI service may be unavailable. Please ensure Ollama is running and try again.");
+                return ResponseEntity.status(503).body(error);
             }
 
             // Validate that resume email matches logged-in user's email
