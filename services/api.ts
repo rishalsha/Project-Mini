@@ -1,11 +1,19 @@
 import { User, UserRole } from '../types';
 
-export const API_BASE = (import.meta as any)?.env?.VITE_API_URL || 'http://localhost:8080';
+// export const API_BASE = (import.meta as any)?.env?.VITE_API_URL || 'http://localhost:8080';
+export const API_BASE = 'http://localhost:8080';
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || `Request failed with status ${res.status}`);
+    let errorMessage = text;
+    try {
+      const json = JSON.parse(text);
+      errorMessage = json.message || json.error || text;
+    } catch (e) {
+      // Not JSON, use raw text
+    }
+    throw new Error(errorMessage || `Request failed with status ${res.status}`);
   }
   return res.json();
 }
@@ -79,5 +87,23 @@ export async function getAllPortfolios(): Promise<any[]> {
 export async function getPortfolioByEmail(email: string): Promise<any> {
   const res = await fetch(`${API_BASE}/api/portfolios/by-email?email=${encodeURIComponent(email)}`);
   if (res.status === 404) return null; // no portfolio yet
+  return handleResponse<any>(res);
+}
+
+export async function resetUserPassword(email: string, password: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  return handleResponse<any>(res);
+}
+
+export async function resetEmployerPassword(email: string, password: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/employer/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
   return handleResponse<any>(res);
 }

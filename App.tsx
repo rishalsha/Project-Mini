@@ -13,7 +13,9 @@ import {
 import { getPortfolioByEmail } from "./services/api";
 import { Eye, EyeOff, LogOut, User as UserIcon, ArrowLeft } from "lucide-react";
 
-const API_URL = "http://localhost:8080/api/resume";
+// const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:8080";
+const API_BASE = "http://localhost:8080";
+const API_URL = `${API_BASE}/api/resume`;
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -90,7 +92,7 @@ const App: React.FC = () => {
         formData.append("userEmail", user.email);
       }
 
-      const response = await fetch(`${API_URL}/parse`, {
+      const response = await fetch(`${API_URL}/clear-and-reanalyze`, {
         method: "POST",
         body: formData,
       });
@@ -126,9 +128,12 @@ const App: React.FC = () => {
       setViewMode("portfolio");
     } catch (error: any) {
       console.error("Error processing resume:", error);
-      const errorMessage =
-        error.message ||
-        "Something went wrong while processing the resume. Please try again.";
+      let errorMessage = error.message || "Something went wrong while processing the resume. Please try again.";
+
+      if (errorMessage.includes("Failed to fetch")) {
+        errorMessage = "Cannot connect to the backend server. Please make sure the API is running at http://localhost:8080 and try again.";
+      }
+
       alert(errorMessage);
       setViewMode("upload");
     }
@@ -231,31 +236,31 @@ const App: React.FC = () => {
       {(viewMode === "employer-dashboard" ||
         viewMode === "upload" ||
         viewMode === "analyzing") && (
-        <div className="fixed top-0 left-0 right-0 h-16 bg-white/0 z-50 flex items-center justify-between px-6 pointer-events-none">
-          <div className="pointer-events-auto bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-sm border border-slate-200 mt-4 flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
-              <UserIcon size={16} />
+          <div className="fixed top-0 left-0 right-0 h-16 bg-white/0 z-50 flex items-center justify-between px-6 pointer-events-none">
+            <div className="pointer-events-auto bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-sm border border-slate-200 mt-4 flex items-center gap-2">
+              <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                <UserIcon size={16} />
+              </div>
+              <div className="text-sm">
+                <span className="font-bold text-slate-900 block leading-tight">
+                  {user.name}
+                </span>
+                <span className="text-xs text-slate-500 uppercase tracking-wide font-semibold">
+                  {user.role} Account
+                </span>
+              </div>
             </div>
-            <div className="text-sm">
-              <span className="font-bold text-slate-900 block leading-tight">
-                {user.name}
-              </span>
-              <span className="text-xs text-slate-500 uppercase tracking-wide font-semibold">
-                {user.role} Account
-              </span>
-            </div>
-          </div>
 
-          <div className="pointer-events-auto flex items-center gap-4">
-            <button
-              onClick={handleLogout}
-              className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-sm border border-slate-200 mt-4 text-sm font-bold text-slate-600 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
-            >
-              <LogOut size={16} /> Sign Out
-            </button>
+            <div className="pointer-events-auto flex items-center gap-4">
+              <button
+                onClick={handleLogout}
+                className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-sm border border-slate-200 mt-4 text-sm font-bold text-slate-600 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+              >
+                <LogOut size={16} /> Sign Out
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* User info in portfolio view - top left */}
       {(viewMode === "portfolio" || viewMode === "employer") && (

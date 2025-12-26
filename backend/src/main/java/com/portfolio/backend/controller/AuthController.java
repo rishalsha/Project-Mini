@@ -10,7 +10,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174", "http://localhost:3000",
+@CrossOrigin(origins = { "http://localhost:3210", "http://localhost:5173", "http://localhost:5174",
+        "http://localhost:3000",
         "http://localhost:3001" })
 public class AuthController {
 
@@ -61,5 +62,20 @@ public class AuthController {
         return userService.findByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String password = body.get("password");
+        if (email == null || password == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        boolean updated = userService.updatePassword(email, password);
+        if (updated) {
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+        } else {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
     }
 }
