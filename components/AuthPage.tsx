@@ -7,6 +7,8 @@ import {
   loginEmployer,
   registerEmployer,
   fetchEmployerByEmail,
+  resetUserPassword,
+  resetEmployerPassword,
 } from "../services/api";
 import {
   Briefcase,
@@ -24,34 +26,51 @@ interface Props {
 
 const AuthPage: React.FC<Props> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [role, setRole] = useState<UserRole>("candidate");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setLoading(true);
 
     try {
+      if (isForgotPassword) {
+        if (role === "candidate") {
+          await resetUserPassword(email, password);
+        } else {
+          await resetEmployerPassword(email, password);
+        }
+        setSuccess("Password updated successfully. You can now log in.");
+        setIsForgotPassword(false);
+        setIsLogin(true);
+        return;
+      }
+
       let authed: User | null = null;
       if (role === "candidate") {
         if (isLogin) {
-          await loginUser(email, password);
+          authed = await loginUser(email, password);
         } else {
-          await registerUser(name || email.split("@")[0], email, password);
+          authed = await registerUser(name, email, password);
         }
+        // Ensure we have the latest user data with the correct name
         authed = await fetchUserByEmail(email);
         authed.role = "candidate";
       } else {
         if (isLogin) {
-          await loginEmployer(email, password);
+          authed = await loginEmployer(email, password);
         } else {
-          await registerEmployer(name || email.split("@")[0], email, password);
+          authed = await registerEmployer(name, email, password);
         }
+        // Ensure we have the latest user data
         authed = await fetchEmployerByEmail(email);
         authed.role = "employer";
       }
@@ -63,9 +82,11 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
       }
     } catch (err: any) {
       const msg = err?.message || "Authentication failed";
+      console.error("Auth error details:", err);
       if (msg.includes("Failed to fetch")) {
         setError(
-          "Cannot reach backend. Start the API server and set VITE_API_URL if it's not http://localhost:8080."
+          "Cannot connect to the backend server. Please make sure the API is running at " +
+          ((import.meta as any)?.env?.VITE_API_URL || "http://localhost:8080")
         );
       } else if (
         msg.includes("Email already registered") ||
@@ -119,11 +140,10 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
                   setRole("candidate");
                   setError(null);
                 }}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${
-                  role === "candidate"
-                    ? "bg-white text-slate-900 border-white"
-                    : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600"
-                }`}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${role === "candidate"
+                  ? "bg-white text-slate-900 border-white"
+                  : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600"
+                  }`}
               >
                 <UserIcon size={18} /> Candidate
               </button>
@@ -132,11 +152,10 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
                   setRole("employer");
                   setError(null);
                 }}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${
-                  role === "employer"
-                    ? "bg-white text-slate-900 border-white"
-                    : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600"
-                }`}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${role === "employer"
+                  ? "bg-white text-slate-900 border-white"
+                  : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600"
+                  }`}
               >
                 <Briefcase size={18} /> Employer
               </button>
@@ -148,14 +167,27 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
         <div className="md:w-1/2 p-12 flex flex-col justify-center">
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-slate-900 mb-2">
-              {isLogin ? "Welcome back" : "Create an account"}
+              {isForgotPassword
+                ? "Reset Password"
+                : isLogin
+                  ? "Welcome back"
+                  : "Create an account"}
             </h3>
             <p className="text-slate-500">
-              {isLogin
-                ? "Enter your details to access your account."
-                : `Sign up as a ${role} to get started.`}
+              {isForgotPassword
+                ? "Enter your email and new password."
+                : isLogin
+                  ? "Enter your details to access your account."
+                  : `Sign up as a ${role} to get started.`}
             </p>
           </div>
+
+          {success && (
+            <div className="mb-6 bg-emerald-50 text-emerald-600 px-4 py-3 rounded-lg text-sm flex items-center gap-2 border border-emerald-100">
+              <Sparkles size={16} />
+              {success}
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center gap-2 border border-red-100">
@@ -165,7 +197,7 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {!isLogin && !isForgotPassword && (
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
                   Full Name
@@ -209,7 +241,7 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                Password
+                {isForgotPassword ? "New Password" : "Password"}
               </label>
               <div className="relative">
                 <Lock
@@ -227,6 +259,23 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
               </div>
             </div>
 
+            {isLogin && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotPassword(true);
+                    setIsLogin(false);
+                    setError(null);
+                    setSuccess(null);
+                  }}
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
             <button
               type="submit"
               className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 mt-4"
@@ -234,34 +283,49 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
             >
               {loading
                 ? "Please wait..."
-                : isLogin
-                ? "Sign In"
-                : "Create Account"}{" "}
+                : isForgotPassword
+                  ? "Reset Password"
+                  : isLogin
+                    ? "Sign In"
+                    : "Create Account"}{" "}
               <ArrowRight size={18} />
             </button>
           </form>
 
           <div className="mt-8 text-center">
             <p className="text-slate-500 text-sm">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
-              <button
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setError(null);
-                }}
-                className="ml-2 font-bold text-indigo-600 hover:text-indigo-800"
-              >
-                {isLogin ? "Sign up" : "Log in"}
-              </button>
+              {isForgotPassword ? (
+                <button
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    setIsLogin(true);
+                    setError(null);
+                  }}
+                  className="font-bold text-indigo-600 hover:text-indigo-800"
+                >
+                  Back to login
+                </button>
+              ) : (
+                <>
+                  {isLogin
+                    ? "Don't have an account?"
+                    : "Already have an account?"}
+                  <button
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setError(null);
+                      setSuccess(null);
+                    }}
+                    className="ml-2 font-bold text-indigo-600 hover:text-indigo-800"
+                  >
+                    {isLogin ? "Sign up" : "Log in"}
+                  </button>
+                </>
+              )}
             </p>
           </div>
 
-          {/* Helper text for demo */}
-          <div className="mt-4 p-3 bg-slate-100 rounded text-xs text-slate-500 text-center">
-            <p>Demo Credentials:</p>
-            <p>Candidate: candidate@demo.com / password</p>
-            <p>Employer: employer@demo.com / password</p>
-          </div>
+
         </div>
       </div>
     </div>

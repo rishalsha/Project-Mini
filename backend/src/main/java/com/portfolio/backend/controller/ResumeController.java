@@ -6,7 +6,6 @@ import com.portfolio.backend.dto.PortfolioData;
 import com.portfolio.backend.dto.ResumeAnalysis;
 import com.portfolio.backend.entity.Portfolio;
 import com.portfolio.backend.entity.ResumeAnalysisEntity;
-import com.portfolio.backend.entity.User;
 import com.portfolio.backend.service.DocumentParserService;
 import com.portfolio.backend.service.OllamaService;
 import com.portfolio.backend.service.PortfolioService;
@@ -18,7 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/resume")
-@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174", "http://localhost:3000",
+@CrossOrigin(origins = { "http://localhost:3210", "http://localhost:5173", "http://localhost:5174",
+        "http://localhost:3000",
         "http://localhost:3001" })
 public class ResumeController {
 
@@ -82,12 +82,40 @@ public class ResumeController {
                 return ResponseEntity.status(503).body(error);
             }
 
-            // Validate that resume email matches logged-in user's email
+            // Super relaxed validation: Check if email OR any part of the name matches
             if (userEmail != null && !userEmail.trim().isEmpty()) {
-                String resumeEmail = portfolio.getEmail();
-                if (resumeEmail == null || !resumeEmail.trim().equalsIgnoreCase(userEmail.trim())) {
-                    ErrorResponse error = new ErrorResponse("Account details and resume data doesn't match");
+                String userEmailLC = userEmail.trim().toLowerCase();
+                String resumeTextLC = resumeText.toLowerCase();
+
+                boolean match = resumeTextLC.contains(userEmailLC);
+
+                if (!match) {
+                    // Try matching by name parts if email isn't found
+                    String userName = userRepository.findByEmail(userEmail)
+                            .map(com.portfolio.backend.entity.User::getName)
+                            .orElse("");
+
+                    if (!userName.isEmpty()) {
+                        String[] nameParts = userName.toLowerCase().split("\\s+");
+                        for (String part : nameParts) {
+                            if (part.length() > 2 && resumeTextLC.contains(part)) {
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!match) {
+                    ErrorResponse error = new ErrorResponse(
+                            "Resume validation failed. We couldn't find your name or email in the uploaded document.");
                     return ResponseEntity.badRequest().body(error);
+                }
+
+                // If AI parsed a different email (or failed to parse one),
+                // override it with the verified account email
+                if (portfolio.getEmail() == null || !portfolio.getEmail().trim().equalsIgnoreCase(userEmailLC)) {
+                    portfolio.setEmail(userEmail.trim());
                 }
             }
 
@@ -130,10 +158,34 @@ public class ResumeController {
             e.printStackTrace();
             // Return a proper error response
             ErrorResponse error = new ErrorResponse(
-                    "Unable to process resume. Please ensure Ollama AI service is running on http://localhost:11434 and try again. Error: "
+                    "Unable to process resume. Please ensure Ollama AI service is running and try again. Error: "
                             + e.getMessage());
             return ResponseEntity.status(503).body(error);
         }
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    @PostMapping("/clear-and-reanalyze")
+    public ResponseEntity<?> clearAndReanalyze(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "text", required = false) String text,
+            @RequestParam(value = "userEmail", required = false) String userEmail) {
+
+        // Remove existing portfolio and analysis for this email to force a fresh AI
+        // parse
+        if (userEmail != null && !userEmail.trim().isEmpty()) {
+            System.out.println("Clearing existing data to force re-analysis: " + userEmail);
+
+            // Clear portfolio
+            portfolioService.deletePortfolioByEmail(userEmail);
+
+            // Clear analysis history
+            userRepository.findByEmail(userEmail).ifPresent(user -> {
+                resumeAnalysisRepository.deleteByUser(user);
+            });
+        }
+
+        return parseResume(file, text, userEmail);
     }
 
     @GetMapping("/health")

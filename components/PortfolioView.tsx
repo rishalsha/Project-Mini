@@ -52,9 +52,8 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
     }
     const hue = Math.abs(hash) % 360;
     return {
-      background: `linear-gradient(135deg, hsl(${hue}, 75%, 70%), hsl(${
-        (hue + 40) % 360
-      }, 70%, 55%))`,
+      background: `linear-gradient(135deg, hsl(${hue}, 75%, 70%), hsl(${(hue + 40) % 360
+        }, 70%, 55%))`,
     } as React.CSSProperties;
   };
 
@@ -66,11 +65,11 @@ const PortfolioView: React.FC<Props> = ({ data, analysis, isEmployerView }) => {
       // Use email-based download to always fetch the latest resume upload
       const downloadUrl = data.email
         ? `${API_BASE}/api/portfolios/by-email/resume?email=${encodeURIComponent(
-            data.email
-          )}`
+          data.email
+        )}`
         : data.id
-        ? `${API_BASE}/api/portfolios/${data.id}/resume`
-        : "";
+          ? `${API_BASE}/api/portfolios/${data.id}/resume`
+          : "";
 
       if (!downloadUrl) {
         alert("Cannot download resume: Portfolio reference not found");

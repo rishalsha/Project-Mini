@@ -127,4 +127,14 @@ public class PortfolioService {
                 .or(() -> portfolioRepository.findFirstByEmailIgnoreCaseOrderByUpdatedAtDesc(email))
                 .orElseThrow(() -> new RuntimeException("Portfolio not found with email: " + email));
     }
+
+    public void deletePortfolioByEmail(String email) {
+        portfolioRepository.findByEmailIgnoreCase(email).ifPresent(p -> {
+            // Delete file first
+            if (p.getResumeFilePath() != null) {
+                deleteIfExists(Paths.get(UPLOAD_DIR).resolve(p.getResumeFilePath()));
+            }
+            portfolioRepository.delete(p);
+        });
+    }
 }

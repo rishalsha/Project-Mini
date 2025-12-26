@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface ResumeAnalysisRepository extends JpaRepository<ResumeAnalysisEntity, Long> {
     List<ResumeAnalysisEntity> findByUser(User user);
+
+    void deleteByUser(User user);
 }

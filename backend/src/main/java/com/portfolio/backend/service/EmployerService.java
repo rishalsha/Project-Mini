@@ -41,4 +41,12 @@ public class EmployerService {
     public Optional<Employer> findByEmail(String email) {
         return employerRepository.findByEmail(email);
     }
+
+    public boolean updatePassword(String email, String newPassword) {
+        return employerRepository.findByEmail(email).map(emp -> {
+            emp.setPasswordHash(passwordEncoder.encode(newPassword));
+            employerRepository.save(emp);
+            return true;
+        }).orElse(false);
+    }
 }
