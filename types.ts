@@ -60,7 +60,7 @@ export interface ResumeAnalysis {
   jobRecommendations: JobRecommendation[];
 }
 
-export type UserRole = 'candidate' | 'employer';
+export type UserRole = 'candidate' | 'employer' | 'administrator';
 
 export interface User {
   id: string;
@@ -77,4 +77,4 @@ export interface CandidateProfile {
   lastUpdated: string;
 }
 
-export type ViewMode = 'upload' | 'analyzing' | 'portfolio' | 'employer' | 'employer-dashboard';
+export type ViewMode = 'upload' | 'analyzing' | 'portfolio' | 'employer' | 'employer-dashboard' | 'admin-dashboard';

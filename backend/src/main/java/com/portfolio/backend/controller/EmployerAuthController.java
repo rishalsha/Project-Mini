@@ -1,7 +1,9 @@
 package com.portfolio.backend.controller;
 
+import com.portfolio.backend.dto.EmployerRegistrationRequest;
 import com.portfolio.backend.entity.Employer;
 import com.portfolio.backend.service.EmployerService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,16 +24,21 @@ public class EmployerAuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Employer> register(@RequestBody Map<String, String> body) {
-        String name = body.getOrDefault("name", "");
-        String email = body.getOrDefault("email", "");
-        String password = body.getOrDefault("password", "");
-        String companyName = body.getOrDefault("companyName", "");
-        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> register(@Valid @RequestBody EmployerRegistrationRequest request) {
+        try {
+            Employer employer = employerService.register(
+                    request.getName().trim(),
+                    request.getEmail().trim().toLowerCase(),
+                    request.getPassword(),
+                    request.getCompanyName());
+            return ResponseEntity.ok(employer);
+        } catch (Exception e) {
+            if ((e.getMessage() != null && e.getMessage().contains("unique constraint")) ||
+                    (e.getMessage() != null && e.getMessage().contains("already exists"))) {
+                return ResponseEntity.status(409).body(Map.of("error", "Email already registered"));
+            }
+            return ResponseEntity.status(500).body(Map.of("error", "Registration failed"));
         }
-        Employer employer = employerService.register(name, email, password, companyName);
-        return ResponseEntity.ok(employer);
     }
 
     @PostMapping("/login")

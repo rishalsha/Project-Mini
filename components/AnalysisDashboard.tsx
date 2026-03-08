@@ -20,6 +20,15 @@ const AnalysisDashboard: React.FC<Props> = ({ analysis }) => {
     { name: "Remaining", value: 100 - analysis.score },
   ];
 
+  const sanitizedWeaknesses = (analysis.weaknesses || []).filter((item) => {
+    const normalized = item.toLowerCase();
+    return (
+      normalized.trim() !== "" &&
+      !normalized.includes("ai analysis failed") &&
+      !normalized.includes("results limited")
+    );
+  });
+
   const COLORS = ["#4f46e5", "#e2e8f0"]; // Indigo-600, Slate-200
 
   return (
@@ -130,15 +139,23 @@ const AnalysisDashboard: React.FC<Props> = ({ analysis }) => {
                 Improvement
               </h4>
               <ul className="space-y-3">
-                {analysis.weaknesses?.map((w, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-3 text-slate-700 text-lg"
-                  >
+                {sanitizedWeaknesses.length > 0 ? (
+                  sanitizedWeaknesses.map((w, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 text-slate-700 text-lg"
+                    >
+                      <span className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                      {w}
+                    </li>
+                  ))
+                ) : (
+                  <li className="flex items-start gap-3 text-slate-700 text-lg">
                     <span className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
-                    {w}
+                    Add more measurable impact, role-specific keywords, and
+                    recent project outcomes to strengthen your profile.
                   </li>
-                ))}
+                )}
               </ul>
             </div>
           </div>

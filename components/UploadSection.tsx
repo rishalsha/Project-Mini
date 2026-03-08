@@ -170,7 +170,7 @@ const UploadSection: React.FC<Props> = ({
       </div>
 
       <p className="mt-8 text-xs text-slate-400">
-        Powered by Ollama (Llama 3.2:3b)
+        Powered by Ollama
       </p>
 
       {!isEmployer && canViewPortfolio && onViewPortfolio && (

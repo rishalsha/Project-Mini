@@ -3,6 +3,7 @@ import UploadSection from "./components/UploadSection";
 import PortfolioView from "./components/PortfolioView";
 import AuthPage from "./components/AuthPage";
 import EmployerDashboard from "./components/EmployerDashboard";
+import AdminDashboard from "./components/AdminDashboard";
 import {
   PortfolioData,
   ResumeAnalysis,
@@ -54,8 +55,11 @@ const App: React.FC = () => {
           return;
         })();
       } else {
-        // Employer defaults to dashboard
-        setViewMode("employer-dashboard");
+        if (user.role === "employer") {
+          setViewMode("employer-dashboard");
+        } else {
+          setViewMode("admin-dashboard");
+        }
         setLoadingPortfolio(false);
       }
     } else {
@@ -234,6 +238,7 @@ const App: React.FC = () => {
     <div className="relative">
       {/* App Header - Only show on non-portfolio pages or as absolute positioned */}
       {(viewMode === "employer-dashboard" ||
+        viewMode === "admin-dashboard" ||
         viewMode === "upload" ||
         viewMode === "analyzing") && (
           <div className="fixed top-0 left-0 right-0 h-16 bg-white/0 z-50 flex items-center justify-between px-6 pointer-events-none">
@@ -299,7 +304,11 @@ const App: React.FC = () => {
         />
       )}
 
-      {(viewMode === "upload" || viewMode === "analyzing") && (
+      {viewMode === "admin-dashboard" && user.role === "administrator" && (
+        <AdminDashboard />
+      )}
+
+      {(viewMode === "upload" || viewMode === "analyzing") && user.role !== "administrator" && (
         <UploadSection
           onUpload={handleUpload}
           isLoading={viewMode === "analyzing"}

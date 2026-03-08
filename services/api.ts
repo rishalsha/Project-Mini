@@ -7,13 +7,23 @@ async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text();
     let errorMessage = text;
+    let status = res.status;
+    let fieldErrors: Record<string, string> | undefined;
     try {
       const json = JSON.parse(text);
       errorMessage = json.message || json.error || text;
+      fieldErrors = json.fieldErrors;
     } catch (e) {
       // Not JSON, use raw text
     }
-    throw new Error(errorMessage || `Request failed with status ${res.status}`);
+
+    const err = new Error(errorMessage || `Request failed with status ${res.status}`) as Error & {
+      status?: number;
+      fieldErrors?: Record<string, string>;
+    };
+    err.status = status;
+    err.fieldErrors = fieldErrors;
+    throw err;
   }
   return res.json();
 }
@@ -105,5 +115,69 @@ export async function resetEmployerPassword(email: string, password: string): Pr
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
   });
+  return handleResponse<any>(res);
+}
+
+export async function loginAdministrator(email: string, password: string): Promise<User> {
+  const res = await fetch(`${API_BASE}/api/admin/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await handleResponse<any>(res);
+  return mapUser(data, 'administrator');
+}
+
+export async function registerAdministrator(name: string, email: string, password: string): Promise<User> {
+  const res = await fetch(`${API_BASE}/api/admin/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, password })
+  });
+  const data = await handleResponse<any>(res);
+  return mapUser(data, 'administrator');
+}
+
+export async function fetchAdministratorByEmail(email: string): Promise<User> {
+  const res = await fetch(`${API_BASE}/api/admin/auth/administrator?email=${encodeURIComponent(email)}`);
+  const data = await handleResponse<any>(res);
+  return mapUser(data, 'administrator');
+}
+
+export async function resetAdministratorPassword(email: string, password: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/admin/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  return handleResponse<any>(res);
+}
+
+export async function getAdminUsers(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/api/admin/users`);
+  return handleResponse<any[]>(res);
+}
+
+export async function deleteCandidateById(id: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/admin/users/candidate/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+  return handleResponse<any>(res);
+}
+
+export async function deleteEmployerById(id: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/admin/users/employer/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+  return handleResponse<any>(res);
+}
+
+export async function getAdminMonitorSummary(): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/admin/monitor/summary`);
+  return handleResponse<any>(res);
+}
+
+export async function getAdminMonitorHealth(): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/admin/monitor/health`);
   return handleResponse<any>(res);
 }

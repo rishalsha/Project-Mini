@@ -1,7 +1,9 @@
 package com.portfolio.backend.controller;
 
+import com.portfolio.backend.dto.UserRegistrationRequest;
 import com.portfolio.backend.entity.User;
 import com.portfolio.backend.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,16 +24,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
-        String name = body.getOrDefault("name", "");
-        String email = body.getOrDefault("email", "");
-        String password = body.getOrDefault("password", "");
-        String resumeFilePath = body.getOrDefault("resumeFilePath", null);
-        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationRequest request) {
         try {
-            User user = userService.register(name, email, password, resumeFilePath);
+            User user = userService.register(
+                    request.getName().trim(),
+                    request.getEmail().trim().toLowerCase(),
+                    request.getPassword(),
+                    request.getResumeFilePath());
             return ResponseEntity.ok(user);
         } catch (Exception e) {
             if (e.getMessage() != null && e.getMessage().contains("unique constraint") ||

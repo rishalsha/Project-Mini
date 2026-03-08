@@ -61,6 +61,12 @@ public class ResumeController {
                 return ResponseEntity.badRequest().build();
             }
 
+            if (resumeText == null || resumeText.trim().isEmpty()) {
+                ErrorResponse error = new ErrorResponse(
+                        "No readable text was found in the uploaded resume. Please upload a text-based PDF or use Paste Text.");
+                return ResponseEntity.badRequest().body(error);
+            }
+
             System.out.println("Parsing resume with Ollama...");
             PortfolioData portfolio = ollamaService.parseResume(resumeText);
 

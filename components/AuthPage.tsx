@@ -9,6 +9,10 @@ import {
   fetchEmployerByEmail,
   resetUserPassword,
   resetEmployerPassword,
+  loginAdministrator,
+  registerAdministrator,
+  fetchAdministratorByEmail,
+  resetAdministratorPassword,
 } from "../services/api";
 import {
   Briefcase,
@@ -18,6 +22,7 @@ import {
   ArrowRight,
   Sparkles,
   AlertCircle,
+  Shield,
 } from "lucide-react";
 
 interface Props {
@@ -35,6 +40,20 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const validatePassword = (pwd: string): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    if (pwd.length < 8) errors.push("At least 8 characters");
+    if (pwd.length > 64) errors.push("Maximum 64 characters");
+    if (!/[a-z]/.test(pwd)) errors.push("Lowercase letter");
+    if (!/[A-Z]/.test(pwd)) errors.push("Uppercase letter");
+    if (!/\d/.test(pwd)) errors.push("Number");
+    if (!/[^A-Za-z0-9]/.test(pwd)) errors.push("Special character");
+    if (/\s/.test(pwd)) errors.push("No spaces allowed");
+    return { isValid: errors.length === 0, errors };
+  };
+
+  const passwordValidation = validatePassword(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -45,8 +64,10 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
       if (isForgotPassword) {
         if (role === "candidate") {
           await resetUserPassword(email, password);
-        } else {
+        } else if (role === "employer") {
           await resetEmployerPassword(email, password);
+        } else {
+          await resetAdministratorPassword(email, password);
         }
         setSuccess("Password updated successfully. You can now log in.");
         setIsForgotPassword(false);
@@ -65,14 +86,23 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
         authed = await fetchUserByEmail(email);
         authed.role = "candidate";
       } else {
-        if (isLogin) {
-          authed = await loginEmployer(email, password);
+        if (role === "employer") {
+          if (isLogin) {
+            authed = await loginEmployer(email, password);
+          } else {
+            authed = await registerEmployer(name, email, password);
+          }
+          authed = await fetchEmployerByEmail(email);
+          authed.role = "employer";
         } else {
-          authed = await registerEmployer(name, email, password);
+          if (isLogin) {
+            authed = await loginAdministrator(email, password);
+          } else {
+            authed = await registerAdministrator(name, email, password);
+          }
+          authed = await fetchAdministratorByEmail(email);
+          authed.role = "administrator";
         }
-        // Ensure we have the latest user data
-        authed = await fetchEmployerByEmail(email);
-        authed.role = "employer";
       }
 
       if (authed) {
@@ -82,19 +112,37 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
       }
     } catch (err: any) {
       const msg = err?.message || "Authentication failed";
+      const status = err?.status;
+      const fieldErrors = err?.fieldErrors as Record<string, string> | undefined;
       console.error("Auth error details:", err);
-      if (msg.includes("Failed to fetch")) {
+
+      if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+        const orderedFields = ["name", "email", "password", "companyName"];
+        const orderedMessages = orderedFields
+          .filter((key) => fieldErrors[key])
+          .map((key) => fieldErrors[key]);
+        const remainingMessages = Object.entries(fieldErrors)
+          .filter(([key]) => !orderedFields.includes(key))
+          .map(([, value]) => value);
+        const allMessages = [...orderedMessages, ...remainingMessages];
+        setError(allMessages.join(" "));
+      } else if (msg.includes("Failed to fetch")) {
         setError(
           "Cannot connect to the backend server. Please make sure the API is running at " +
           ((import.meta as any)?.env?.VITE_API_URL || "http://localhost:8080")
         );
-      } else if (
-        msg.includes("Email already registered") ||
-        msg.includes("409")
-      ) {
+      } else if (status === 409 || msg.includes("Email already registered") || msg.includes("409")) {
         setError("This email is already registered. Please log in instead.");
-      } else if (msg.includes("401")) {
+      } else if (status === 401 || msg.includes("401")) {
         setError("Invalid email or password.");
+      } else if (status === 404 && isForgotPassword) {
+        setError(`No ${role} account found with this email.`);
+      } else if (status === 400) {
+        setError("Please check your input and try again.");
+      } else if (status === 500 && !isLogin && !isForgotPassword) {
+        setError("Registration failed due to a server error. Please try again in a moment.");
+      } else if (status === 500) {
+        setError("Server error. Please try again in a moment.");
       } else {
         setError(msg);
       }
@@ -124,23 +172,27 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
             <h2 className="text-4xl font-extrabold text-white mb-6 leading-tight">
               {role === "candidate"
                 ? "Launch your career with an AI-powered portfolio."
-                : "Access our curated talent pool."}
+                : role === "employer"
+                  ? "Access our curated talent pool."
+                  : "Manage users and monitor platform health."}
             </h2>
             <p className="text-slate-400 text-lg">
               {role === "candidate"
                 ? "Upload your resume and get a professional website + job market analysis in seconds."
-                : "Log in to browse pre-vetted candidates or screen new resumes instantly."}
+                : role === "employer"
+                  ? "Log in to browse pre-vetted candidates or screen new resumes instantly."
+                  : "Use the administrator console to manage candidate/employer accounts and monitor system status."}
             </p>
           </div>
 
-          <div className="relative z-10 mt-12">
-            <div className="flex gap-4">
+          <div className="relative z-10 mt-12 pr-3 md:pr-6">
+            <div className="flex gap-2 md:gap-3">
               <button
                 onClick={() => {
                   setRole("candidate");
                   setError(null);
                 }}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${role === "candidate"
+                className={`flex-1 min-w-0 py-3 px-2 md:px-3 rounded-xl text-xs md:text-sm font-bold transition-all border-2 flex items-center justify-center gap-1.5 md:gap-2 ${role === "candidate"
                   ? "bg-white text-slate-900 border-white"
                   : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600"
                   }`}
@@ -152,12 +204,24 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
                   setRole("employer");
                   setError(null);
                 }}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${role === "employer"
+                className={`flex-1 min-w-0 py-3 px-2 md:px-3 rounded-xl text-xs md:text-sm font-bold transition-all border-2 flex items-center justify-center gap-1.5 md:gap-2 ${role === "employer"
                   ? "bg-white text-slate-900 border-white"
                   : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600"
                   }`}
               >
                 <Briefcase size={18} /> Employer
+              </button>
+              <button
+                onClick={() => {
+                  setRole("administrator");
+                  setError(null);
+                }}
+                className={`flex-1 min-w-0 py-3 px-2 md:px-3 rounded-xl text-xs md:text-sm font-bold transition-all border-2 flex items-center justify-center gap-1.5 md:gap-2 ${role === "administrator"
+                  ? "bg-white text-slate-900 border-white"
+                  : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600"
+                  }`}
+              >
+                <Shield size={18} /> Admin
               </button>
             </div>
           </div>
@@ -213,7 +277,7 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-slate-900"
-                    placeholder="John Doe"
+                    placeholder="Your Full Name"
                   />
                 </div>
               </div>
@@ -234,7 +298,7 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-slate-900"
-                  placeholder="name@example.com"
+                  placeholder="Your Email Address"
                 />
               </div>
             </div>
@@ -253,10 +317,47 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-slate-900"
-                  placeholder="••••••••"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-lg focus:ring-2 focus:border-indigo-500 outline-none transition-all text-slate-900 ${
+                    password && !passwordValidation.isValid
+                      ? "border-red-300 focus:ring-red-500"
+                      : password && passwordValidation.isValid
+                        ? "border-emerald-300 focus:ring-emerald-500"
+                        : "border-slate-200 focus:ring-indigo-500"
+                  }`}
+                  placeholder={isForgotPassword ? "Enter New Password" : "Your Password"}
                 />
               </div>
+
+              {password && !isLogin && !isForgotPassword && (
+                <div className="mt-2 space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <p className="text-xs font-semibold text-slate-700 mb-1">Password must contain:</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {[
+                      { text: "At least 8 characters", check: password.length >= 8 },
+                      { text: "Uppercase letter", check: /[A-Z]/.test(password) },
+                      { text: "Lowercase letter", check: /[a-z]/.test(password) },
+                      { text: "Number", check: /\d/.test(password) },
+                      { text: "Special character", check: /[^A-Za-z0-9]/.test(password) },
+                      { text: "No spaces", check: !/\s/.test(password) },
+                    ].map((req, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5">
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            req.check
+                              ? "bg-emerald-500 text-white"
+                              : "bg-slate-300 text-slate-500"
+                          }`}
+                        >
+                          {req.check ? "✓" : "○"}
+                        </div>
+                        <span className={req.check ? "text-emerald-700" : "text-slate-600"}>
+                          {req.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {isLogin && (
@@ -278,8 +379,12 @@ const AuthPage: React.FC<Props> = ({ onLogin }) => {
 
             <button
               type="submit"
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 mt-4"
-              disabled={loading}
+              className={`w-full py-4 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-4 ${
+                !isLogin && !isForgotPassword && password && !passwordValidation.isValid
+                  ? "bg-slate-300 cursor-not-allowed shadow-none"
+                  : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200"
+              }`}
+              disabled={loading || (!isLogin && !isForgotPassword && password && !passwordValidation.isValid)}
             >
               {loading
                 ? "Please wait..."
